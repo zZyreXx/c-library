@@ -2,23 +2,129 @@
 <html>
 <head>
   <title>C Library</title>
-  <link rel="stylesheet" href="style.css">
 
   <!-- Highlight.js -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: #252526;
+      padding: 12px;
+      border-right: 1px solid #333;
+    }
+
+    #search {
+      width: 100%;
+      padding: 7px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 5px;
+      background: #1e1e1e;
+      color: white;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar li {
+      padding: 8px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .sidebar li:hover {
+      background: #3c3c3c;
+    }
+
+    .sidebar li.active {
+      background: #094771;
+    }
+
+    .editor {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tabbar {
+      background: #2d2d2d;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #333;
+    }
+
+    button {
+      background: #0e639c;
+      border: none;
+      padding: 5px 12px;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1177bb;
+    }
+
+    .code-wrapper {
+      display: flex;
+      flex: 1;
+    }
+
+    #lineNumbers {
+      background: #1e1e1e;
+      padding: 15px 10px;
+      text-align: right;
+      color: #858585;
+    }
+
+    pre {
+      margin: 0;
+      padding: 15px;
+      flex: 1;
+      overflow: auto;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 8px;
+      right: 15px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    footer span {
+      color: #ff4d6d;
+    }
+  </style>
 </head>
+
 <body>
 
 <div class="container">
 
-  <!-- Sidebar -->
   <div class="sidebar">
     <h3>📁 C Programs</h3>
     <input type="text" id="search" placeholder="Search...">
     <ul id="fileList"></ul>
   </div>
 
-  <!-- Editor -->
   <div class="editor">
     <div class="tabbar">
       <span id="fileName">Loading...</span>
@@ -35,10 +141,84 @@
 
 <footer>Made by Taifyu with <span>❤️</span></footer>
 
-<!-- Scripts (IMPORTANT ORDER) -->
+<!-- Scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="codes.js"></script>
-<script src="app.js"></script>
+
+<script>
+window.onload = function () {
+  const fileList = document.getElementById("fileList");
+  const codeArea = document.getElementById("codeArea");
+  const fileName = document.getElementById("fileName");
+  const search = document.getElementById("search");
+  const lineNumbers = document.getElementById("lineNumbers");
+
+  if (typeof codes === "undefined") {
+    fileName.textContent = "Error: codes.js not loaded";
+    return;
+  }
+
+  let currentCode = "";
+  let activeItem = null;
+  let filteredCodes = [...codes];
+
+  function loadCode(index, element) {
+    const c = filteredCodes[index];
+
+    fileName.textContent = c.title;
+    codeArea.textContent = c.code;
+    currentCode = c.code;
+
+    hljs.highlightElement(codeArea);
+
+    // Line numbers
+    const lines = c.code.split("\n").length;
+    lineNumbers.innerHTML = "";
+    for (let i = 1; i <= lines; i++) {
+      lineNumbers.innerHTML += i + "<br>";
+    }
+
+    if (activeItem) activeItem.classList.remove("active");
+    element.classList.add("active");
+    activeItem = element;
+  }
+
+  function renderList(list) {
+    fileList.innerHTML = "";
+
+    list.forEach((c, index) => {
+      const li = document.createElement("li");
+      li.textContent = c.title;
+      li.onclick = () => loadCode(index, li);
+      fileList.appendChild(li);
+    });
+
+    if (list.length > 0) {
+      loadCode(0, fileList.children[0]);
+    }
+  }
+
+  renderList(filteredCodes);
+
+  search.addEventListener("input", () => {
+    const value = search.value.toLowerCase();
+    filteredCodes = codes.filter(c =>
+      c.title.toLowerCase().includes(value)
+    );
+    renderList(filteredCodes);
+  });
+
+  window.copyCode = function () {
+    if (!currentCode) return;
+
+    navigator.clipboard.writeText(currentCode);
+
+    const btn = document.querySelector("button");
+    btn.textContent = "Copied!";
+    setTimeout(() => (btn.textContent = "Copy"), 1200);
+  };
+};
+</script>
 
 </body>
 </html>
