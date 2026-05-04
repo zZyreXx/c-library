@@ -5,6 +5,11 @@ window.onload = function () {
   const search = document.getElementById("search");
   const lineNumbers = document.getElementById("lineNumbers");
 
+  if (typeof codes === "undefined") {
+    fileName.textContent = "Error: codes.js not loaded";
+    return;
+  }
+
   let currentCode = "";
   let activeItem = null;
   let filteredCodes = [...codes];
@@ -25,7 +30,6 @@ window.onload = function () {
       lineNumbers.innerHTML += i + "<br>";
     }
 
-    // Active highlight
     if (activeItem) activeItem.classList.remove("active");
     element.classList.add("active");
     activeItem = element;
@@ -37,9 +41,7 @@ window.onload = function () {
     list.forEach((c, index) => {
       const li = document.createElement("li");
       li.textContent = c.title;
-
       li.onclick = () => loadCode(index, li);
-
       fileList.appendChild(li);
     });
 
@@ -50,18 +52,14 @@ window.onload = function () {
 
   renderList(filteredCodes);
 
-  // Search
   search.addEventListener("input", () => {
     const value = search.value.toLowerCase();
-
     filteredCodes = codes.filter(c =>
       c.title.toLowerCase().includes(value)
     );
-
     renderList(filteredCodes);
   });
 
-  // Copy
   window.copyCode = function () {
     if (!currentCode) return;
 
