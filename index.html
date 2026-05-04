@@ -141,7 +141,7 @@
 
 <footer>Made by Taifyu with <span>❤️</span></footer>
 
-<!-- Scripts -->
+<!-- IMPORTANT: scripts at END -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="./codes.js"></script>
 
@@ -153,8 +153,10 @@ window.onload = function () {
   const search = document.getElementById("search");
   const lineNumbers = document.getElementById("lineNumbers");
 
+  // DEBUG CHECK
   if (typeof codes === "undefined") {
-    fileName.textContent = "Error: codes.js not loaded";
+    fileName.textContent = "codes.js NOT LOADED ❌";
+    console.error("codes.js failed to load");
     return;
   }
 
@@ -171,7 +173,7 @@ window.onload = function () {
 
     hljs.highlightElement(codeArea);
 
-    // Line numbers
+    // line numbers
     const lines = c.code.split("\n").length;
     lineNumbers.innerHTML = "";
     for (let i = 1; i <= lines; i++) {
