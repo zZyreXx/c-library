@@ -257,6 +257,7 @@
   let searchTimer = null;
   let currentCategory = 'All';
   let currentSearch = '';
+  let _currentCode = ''; // stores code safely for copy — no inline escaping
 
   // ── INIT ──
   async function init() {
@@ -288,62 +289,56 @@
 
   async function loadPrograms() {
     const list = document.getElementById('fileList');
-    let url = `${API}?`;
-    if (currentSearch) url += `search=${encodeURIComponent(currentSearch)}&`;
-    if (currentCategory !== 'All') url += `category=${encodeURIComponent(currentCategory)}&`;
-
+    let url = API + '?';
+    if (currentSearch) url += 'search=' + encodeURIComponent(currentSearch) + '&';
+    if (currentCategory !== 'All') url += 'category=' + encodeURIComponent(currentCategory) + '&';
     try {
       const res = await fetch(url);
+      if (!res.ok) throw new Error('Server error ' + res.status);
       const data = await res.json();
       programs = data.data || [];
-      document.getElementById('statusCount').textContent = `${programs.length} program${programs.length!==1?'s':''}`;
+      document.getElementById('statusCount').textContent = programs.length + ' program' + (programs.length !== 1 ? 's' : '');
       renderFileList();
     } catch(e) {
-      list.innerHTML = `<div class="file-list-empty">⚠️ Cannot connect to server.<br>Make sure the backend is running.</div>`;
+      list.innerHTML = '<div class="file-list-empty">⚠️ Cannot connect to server.<br>Check your MONGODB_URI env var on Vercel.</div>';
     }
   }
 
   function renderFileList() {
     const list = document.getElementById('fileList');
     if (!programs.length) {
-      list.innerHTML = `<div class="file-list-empty">No programs found.<br>Be the first to upload!</div>`;
+      list.innerHTML = '<div class="file-list-empty">No programs found.<br>Be the first to upload!</div>';
       return;
     }
-    list.innerHTML = programs.map(p => `
-      <div class="file-item ${p._id===activeId?'active':''}" onclick="openProgram('${p._id}')">
-        <span class="file-icon">📄</span>
-        <span class="file-name">${esc(p.title)}.c</span>
-        <span class="file-badge">${p.category}</span>
-      </div>
-    `).join('');
+    list.innerHTML = programs.map(p =>
+      '<div class="file-item ' + (p._id === activeId ? 'active' : '') + '" onclick="openProgram('' + p._id + '')">' +
+      '<span class="file-icon">📄</span>' +
+      '<span class="file-name">' + esc(p.title) + '.c</span>' +
+      '<span class="file-badge">' + esc(p.category) + '</span>' +
+      '</div>'
+    ).join('');
   }
 
-  // ── WELCOME SCREEN ──
+  // ── WELCOME ──
   function showWelcome() {
     activeId = null;
     renderFileList();
     setTab('welcome', '🏠 Welcome', false);
-    document.getElementById('content').innerHTML = `
-      <div class="welcome">
-        <div class="welcome-logo">&lt;C&gt;</div>
-        <h1>C Program Library</h1>
-        <p>A shared space for C programs. Upload, explore, and copy code written by the community.</p>
-        <div class="welcome-btns">
-          <button class="btn btn-primary" onclick="showUpload()">⬆ Upload a Program</button>
-          <button class="btn btn-ghost" onclick="openFirstProgram()">Browse Library</button>
-        </div>
-        <div class="welcome-stats">
-          <div class="stat">
-            <div class="stat-num" id="statCount">${programs.length}</div>
-            <div class="stat-label">Programs</div>
-          </div>
-          <div class="stat">
-            <div class="stat-num">${CATS.length - 1}</div>
-            <div class="stat-label">Categories</div>
-          </div>
-        </div>
-        <div style="font-size:11px;color:var(--text-dim);margin-top:8px;">Made by <span style="color:var(--accent);font-family:'JetBrains Mono',monospace;">Taifyu</span></div>
-      </div>`;
+    document.getElementById('content').innerHTML =
+      '<div class="welcome">' +
+      '<div class="welcome-logo">&lt;C&gt;</div>' +
+      '<h1>C Program Library</h1>' +
+      '<p>A shared space for C programs. Upload, explore, and copy code written by the community.</p>' +
+      '<div class="welcome-btns">' +
+      '<button class="btn btn-primary" onclick="showUpload()">⬆ Upload a Program</button>' +
+      '<button class="btn btn-ghost" onclick="openFirstProgram()">Browse Library</button>' +
+      '</div>' +
+      '<div class="welcome-stats">' +
+      '<div class="stat"><div class="stat-num">' + programs.length + '</div><div class="stat-label">Programs</div></div>' +
+      '<div class="stat"><div class="stat-num">' + (CATS.length - 1) + '</div><div class="stat-label">Categories</div></div>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--text-dim);margin-top:8px;">Made by <span style="color:var(--accent);font-family:'JetBrains Mono',monospace;">Taifyu</span></div>' +
+      '</div>';
   }
 
   function openFirstProgram() {
@@ -356,66 +351,72 @@
     renderFileList();
     const prog = programs.find(p => p._id === id);
     if (prog) setTab(id, prog.title + '.c', false);
-    document.getElementById('content').innerHTML = `<div class="loading"><div class="spinner"></div> Loading...</div>`;
-
+    document.getElementById('content').innerHTML = '<div class="loading"><div class="spinner"></div> Loading...</div>';
     try {
-      const res = await fetch(`${API}/${id}`);
+      const res = await fetch(API + '/' + id);
+      if (!res.ok) throw new Error('Server error ' + res.status);
       const data = await res.json();
-      const p = data.data;
-      renderCodeView(p);
+      renderCodeView(data.data);
     } catch(e) {
-      document.getElementById('content').innerHTML = `<div class="loading">Failed to load program.</div>`;
+      document.getElementById('content').innerHTML = '<div class="loading">Failed to load program: ' + e.message + '</div>';
     }
   }
 
   function renderCodeView(p) {
+    _currentCode = p.code; // store safely — copy button reads this, no inline escaping
     const lines = p.code.split('\n');
-    const nums = lines.map((_,i) => i+1).join('\n');
+    const nums = lines.map(function(_,i){ return i+1; }).join('\n');
     const highlighted = syntaxHighlight(esc(p.code));
     const date = new Date(p.createdAt).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+    const tagsHtml = (p.tags && p.tags.length)
+      ? '<div class="code-tags">' + p.tags.map(function(t){ return '<span class="tag">#' + esc(t) + '</span>'; }).join('') + '</div>'
+      : '';
 
-    document.getElementById('content').innerHTML = `
-      <div class="code-view">
-        <div class="breadcrumb">
-          <span>C Library</span>
-          <span class="sep">›</span>
-          <span>${esc(p.category)}</span>
-          <span class="sep">›</span>
-          <span class="cur">${esc(p.title)}.c</span>
-        </div>
+    const el = document.getElementById('content');
+    el.innerHTML = '';
 
-        <div class="code-header">
-          <div class="code-meta">
-            <h2>${esc(p.title)}</h2>
-            ${p.description ? `<div class="code-desc">${esc(p.description)}</div>` : ''}
-            <div class="meta-row">
-              <div class="meta-item">👤 <span class="val">${esc(p.author||'Anonymous')}</span></div>
-              <div class="meta-item">🗂 <span class="val">${esc(p.category)}</span></div>
-              <div class="meta-item">👁 <span class="val">${p.views} views</span></div>
-              <div class="meta-item">📅 <span class="val">${date}</span></div>
-              <div class="meta-item">📏 <span class="val">${lines.length} lines</span></div>
-            </div>
-            ${p.tags&&p.tags.length ? `<div class="code-tags">${p.tags.map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}</div>` : ''}
-          </div>
-          <div class="code-actions">
-            <button class="btn btn-ghost" onclick="confirmDelete('${p._id}', '${esc(p.title)}')">🗑 Delete</button>
-          </div>
-        </div>
+    const wrap = document.createElement('div');
+    wrap.className = 'code-view';
+    wrap.innerHTML =
+      '<div class="breadcrumb"><span>C Library</span><span class="sep">›</span><span>' + esc(p.category) + '</span><span class="sep">›</span><span class="cur">' + esc(p.title) + '.c</span></div>' +
+      '<div class="code-header">' +
+        '<div class="code-meta">' +
+          '<h2>' + esc(p.title) + '</h2>' +
+          (p.description ? '<div class="code-desc">' + esc(p.description) + '</div>' : '') +
+          '<div class="meta-row">' +
+            '<div class="meta-item">👤 <span class="val">' + esc(p.author || 'Anonymous') + '</span></div>' +
+            '<div class="meta-item">🗂 <span class="val">' + esc(p.category) + '</span></div>' +
+            '<div class="meta-item">👁 <span class="val">' + p.views + ' views</span></div>' +
+            '<div class="meta-item">📅 <span class="val">' + date + '</span></div>' +
+            '<div class="meta-item">📏 <span class="val">' + lines.length + ' lines</span></div>' +
+          '</div>' +
+          tagsHtml +
+        '</div>' +
+        '<div class="code-actions">' +
+          '<button class="btn btn-ghost" id="deleteBtn">🗑 Delete</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="code-block-wrap">' +
+        '<div class="code-block-bar">' +
+          '<span class="lang">C Language</span>' +
+          '<button class="copy-btn" id="copyBtn">' +
+            '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>' +
+            ' Copy' +
+          '</button>' +
+        '</div>' +
+        '<div class="line-numbers">' +
+          '<pre class="ln-nums">' + nums + '</pre>' +
+          '<pre><code>' + highlighted + '</code></pre>' +
+        '</div>' +
+      '</div>';
 
-        <div class="code-block-wrap">
-          <div class="code-block-bar">
-            <span class="lang">C Language</span>
-            <button class="copy-btn" id="copyBtn" onclick="copyCode(\`${escBt(p.code)}\`)">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-              Copy
-            </button>
-          </div>
-          <div class="line-numbers">
-            <pre class="ln-nums">${nums}</pre>
-            <pre><code>${highlighted}</code></pre>
-          </div>
-        </div>
-      </div>`;
+    el.appendChild(wrap);
+
+    // Attach events via JS — no inline onclick with code values
+    document.getElementById('copyBtn').addEventListener('click', copyCode);
+    document.getElementById('deleteBtn').addEventListener('click', function() {
+      confirmDelete(p._id, p.title);
+    });
   }
 
   // ── UPLOAD ──
@@ -423,55 +424,30 @@
     activeId = null;
     renderFileList();
     setTab('upload', '⬆ Upload.c', true);
-    document.getElementById('content').innerHTML = `
-      <div class="upload-view">
-        <h2>⬆ Upload C Program</h2>
+    document.getElementById('content').innerHTML =
+      '<div class="upload-view">' +
+      '<h2>⬆ Upload C Program</h2>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label>Title <span class="req">*</span></label><input class="form-input" id="fTitle" placeholder="e.g. Bubble Sort" /></div>' +
+        '<div class="form-group"><label>Category</label><select class="form-select" id="fCat">' +
+          CATS.filter(function(c){ return c !== 'All'; }).map(function(c){ return '<option>' + c + '</option>'; }).join('') +
+        '</select></div>' +
+      '</div>' +
+      '<div class="form-group"><label>Description</label><input class="form-input" id="fDesc" placeholder="Brief description..." /></div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label>Your Name</label><input class="form-input" id="fAuthor" placeholder="Anonymous" /></div>' +
+        '<div class="form-group"><label>Tags</label><input class="form-input" id="fTags" placeholder="array, loop, pointer" /><div class="form-hint">Comma separated</div></div>' +
+      '</div>' +
+      '<div class="form-group"><label>C Code <span class="req">*</span></label>' +
+        '<textarea class="form-textarea" id="fCode" placeholder="#include &lt;stdio.h&gt;&#10;&#10;int main() {&#10;    // Your code here&#10;    return 0;&#10;}"></textarea>' +
+      '</div>' +
+      '<div class="upload-actions">' +
+        '<button class="btn btn-primary" id="uploadBtn">⬆ Upload Program</button>' +
+        '<button class="btn btn-ghost" onclick="showWelcome()">Cancel</button>' +
+      '</div>' +
+      '</div>';
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Title <span class="req">*</span></label>
-            <input class="form-input" id="fTitle" placeholder="e.g. Bubble Sort" />
-          </div>
-          <div class="form-group">
-            <label>Category</label>
-            <select class="form-select" id="fCat">
-              ${CATS.filter(c=>c!=='All').map(c=>`<option>${c}</option>`).join('')}
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Description</label>
-          <input class="form-input" id="fDesc" placeholder="Brief description of what this program does..." />
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Your Name</label>
-            <input class="form-input" id="fAuthor" placeholder="Anonymous" />
-          </div>
-          <div class="form-group">
-            <label>Tags</label>
-            <input class="form-input" id="fTags" placeholder="array, loop, pointer (comma separated)" />
-            <div class="form-hint">Separate tags with commas</div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>C Code <span class="req">*</span></label>
-          <textarea class="form-textarea" id="fCode" placeholder="#include &lt;stdio.h&gt;
-
-int main() {
-    // Your code here
-    return 0;
-}"></textarea>
-        </div>
-
-        <div class="upload-actions">
-          <button class="btn btn-primary" onclick="submitUpload()">⬆ Upload Program</button>
-          <button class="btn btn-ghost" onclick="showWelcome()">Cancel</button>
-        </div>
-      </div>`;
+    document.getElementById('uploadBtn').addEventListener('click', submitUpload);
   }
 
   async function submitUpload() {
@@ -480,28 +456,36 @@ int main() {
     if (!title) { showToast('Title is required', true); return; }
     if (!code)  { showToast('Code is required', true); return; }
 
+    const btn = document.getElementById('uploadBtn');
+    btn.textContent = 'Uploading...';
+    btn.disabled = true;
+
     const body = {
-      title,
+      title:       title,
       description: document.getElementById('fDesc').value.trim(),
-      code,
-      category: document.getElementById('fCat').value,
-      author: document.getElementById('fAuthor').value.trim() || 'Anonymous',
-      tags: document.getElementById('fTags').value
+      code:        code,
+      category:    document.getElementById('fCat').value,
+      author:      document.getElementById('fAuthor').value.trim() || 'Anonymous',
+      tags:        document.getElementById('fTags').value
     };
 
     try {
       const res = await fetch(API, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error);
+      const text = await res.text(); // read as text first to catch non-JSON errors
+      let data;
+      try { data = JSON.parse(text); } catch(e) { throw new Error('Server returned invalid response: ' + text.slice(0,100)); }
+      if (!data.success) throw new Error(data.error || 'Upload failed');
       showToast('✅ Program uploaded!');
       await loadPrograms();
       openProgram(data.data._id);
     } catch(e) {
       showToast('Upload failed: ' + e.message, true);
+      btn.textContent = '⬆ Upload Program';
+      btn.disabled = false;
     }
   }
 
@@ -512,17 +496,26 @@ int main() {
     const bar = document.createElement('div');
     bar.id = 'delBar';
     bar.className = 'del-bar';
-    bar.innerHTML = `
-      <p>⚠️ Delete "<strong>${esc(title)}</strong>"? This cannot be undone.</p>
-      <button class="btn btn-danger" onclick="doDelete('${id}')">Delete</button>
-      <button class="btn btn-ghost" onclick="document.getElementById('delBar').remove()">Cancel</button>`;
+    bar.innerHTML = '<p>⚠️ Delete "<strong>' + esc(title) + '</strong>"? This cannot be undone.</p>';
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn btn-danger';
+    delBtn.textContent = 'Delete';
+    delBtn.addEventListener('click', function() { doDelete(id); });
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-ghost';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', function() { bar.remove(); });
+    bar.appendChild(delBtn);
+    bar.appendChild(cancelBtn);
     document.querySelector('.code-view').appendChild(bar);
   }
 
   async function doDelete(id) {
     try {
-      const res = await fetch(`${API}/${id}`, { method:'DELETE' });
-      const data = await res.json();
+      const res = await fetch(API + '/' + id, { method: 'DELETE' });
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch(e) { throw new Error('Server error'); }
       if (!data.success) throw new Error(data.error);
       showToast('🗑 Program deleted');
       await loadPrograms();
@@ -535,49 +528,52 @@ int main() {
   // ── TABS ──
   function setTab(id, label, modified) {
     const tabs = document.getElementById('tabs');
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
     const existing = document.getElementById('tab-' + id);
     if (existing) { existing.classList.add('active'); return; }
-    // Remove old non-welcome tabs if too many
     const allTabs = tabs.querySelectorAll('.tab:not(#tab-welcome)');
     if (allTabs.length > 4) allTabs[0].remove();
     const tab = document.createElement('div');
     tab.className = 'tab active' + (modified ? ' modified' : '');
     tab.id = 'tab-' + id;
-    tab.innerHTML = `<span class="tab-icon">📄</span> ${esc(label)}`;
-    tab.onclick = () => {
+    tab.innerHTML = '<span class="tab-icon">📄</span> ' + esc(label);
+    tab.addEventListener('click', function() {
       if (id === 'upload') showUpload();
       else if (id === 'welcome') showWelcome();
       else openProgram(id);
-    };
+    });
     tabs.appendChild(tab);
   }
 
   function setActivity(name) {
-    document.querySelectorAll('.ab-icon').forEach(el => el.classList.remove('active'));
-    document.getElementById('ab-' + name)?.classList.add('active');
+    document.querySelectorAll('.ab-icon').forEach(function(el) { el.classList.remove('active'); });
+    var el = document.getElementById('ab-' + name);
+    if (el) el.classList.add('active');
   }
 
-  // ── COPY ──
-  function copyCode(code) {
-    navigator.clipboard.writeText(code).then(() => {
+  // ── COPY — reads _currentCode, no args needed ──
+  function copyCode() {
+    navigator.clipboard.writeText(_currentCode).then(function() {
       const btn = document.getElementById('copyBtn');
+      if (!btn) return;
       btn.classList.add('copied');
-      btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
       showToast('✅ Code copied to clipboard!');
-      setTimeout(() => {
+      setTimeout(function() {
         btn.classList.remove('copied');
-        btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy`;
+        btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
       }, 2000);
+    }).catch(function() {
+      showToast('Copy failed — try selecting manually', true);
     });
   }
 
   // ── TOAST ──
-  function showToast(msg, error=false) {
+  function showToast(msg, error) {
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.className = 'toast show' + (error ? ' error' : '');
-    setTimeout(() => t.className = 'toast', 3000);
+    setTimeout(function() { t.className = 'toast'; }, 3000);
   }
 
   // ── SYNTAX HIGHLIGHT ──
@@ -587,7 +583,6 @@ int main() {
       .replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="cm">$1</span>')
       .replace(/(&lt;[^&]+&gt;)/g, '<span class="st">$1</span>')
       .replace(/"([^"]*)"/g, '<span class="st">"$1"</span>')
-      .replace(/'(\\?.)'/, '<span class="st">\'$1\'</span>')
       .replace(/#(include|define|ifndef|ifdef|endif|pragma|undef|if|else|elif)\b/g, '<span class="pp">#$1</span>')
       .replace(/\b(int|char|float|double|void|long|short|unsigned|signed|const|static|extern|struct|union|enum|typedef|return|if|else|for|while|do|switch|case|break|continue|default|sizeof|goto|register|volatile|auto|inline)\b/g, '<span class="kw">$1</span>')
       .replace(/\b([A-Z_][A-Z0-9_]{2,})\b/g, '<span class="ty">$1</span>')
@@ -598,9 +593,6 @@ int main() {
   // ── UTILS ──
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-  function escBt(s) {
-    return s.replace(/`/g,'\\`').replace(/\$/g,'\\$');
   }
 
   init();
