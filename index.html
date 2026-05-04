@@ -13,32 +13,29 @@
 
   <!-- Sidebar -->
   <div class="sidebar">
-    <h2>📁 C Programs</h2>
+    <h3>📁 C Programs</h3>
     <input type="text" id="search" placeholder="Search...">
     <ul id="fileList"></ul>
   </div>
 
   <!-- Editor -->
   <div class="editor">
-
-    <!-- Tab bar -->
     <div class="tabbar">
       <span id="fileName">Loading...</span>
       <button onclick="copyCode()">Copy</button>
     </div>
 
-    <!-- Code -->
     <div class="code-wrapper">
       <div id="lineNumbers"></div>
       <pre><code id="codeArea" class="language-c"></code></pre>
     </div>
-
   </div>
 
 </div>
 
 <footer>Made by Taifyu with <span>❤️</span></footer>
 
+<!-- Scripts (IMPORTANT ORDER) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="codes.js"></script>
 <script src="app.js"></script>
