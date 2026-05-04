@@ -9,221 +9,261 @@ void main() {
     getch(); 
 }`
   },
+
   {
     title: "Area of Rectangle",
     code: `#include <stdio.h>
-#include <stdio.h>
-void main() 
-{
+#include <conio.h>
+
+void main() {
     int l, b, area;
     clrscr();
-    printf("/n Enter the Length and breadth of the rectangle");
-    scanf("%d%d,&l,&b);
-    area=l+b;
-    printf("/n The area of the rectangle=%d",area);
+
+    printf("\\nEnter length and breadth:");
+    scanf("%d %d", &l, &b);
+
+    area = l * b;
+
+    printf("\\nArea = %d", area);
     getch();
 }`
   },
+
   {
     title: "Total and Percentage",
     code: `#include <stdio.h>
-#include<conio.h>
-void main() 
-{
+#include <conio.h>
+
+void main() {
   int a, b, c, d, e, total, p;
   clrscr();
-  printf("/n Enter five marks");
+
+  printf("\\nEnter five marks:");
   scanf("%d%d%d%d%d", &a, &b, &c, &d, &e);
-  total=a+b+c+d+e;
-  p=(total/500)*100;
-  printf("/n total=%d", total);
-  printf("/n percentage=%d",p);
+
+  total = a + b + c + d + e;
+  p = (total * 100) / 500;
+
+  printf("\\nTotal = %d", total);
+  printf("\\nPercentage = %d", p);
+
   getch();
 }`
   },
+
   {
-    title: "Positive and Negative",
+    title: "Positive or Negative",
     code: `#include <stdio.h>
-#include<conio.h>
-void main() 
-{
+#include <conio.h>
+
+void main() {
   int n;
   clrscr();
-  printf("/n Enter the Numbers");
+
+  printf("\\nEnter number:");
   scanf("%d", &n);
-  if(n>0)
-  {
-  printf("/n The number in Positive");
-  }
+
+  if(n > 0)
+    printf("\\nPositive");
   else
-  {
-    printf("/n The number is negative");
-  }
-    getch();
-}`
-  },
-  {
-    title: "Odd or even",
-    code: `#include <stdio.h>
-#include<conio.h>
-void main() 
-{
-    int a;
-    printf("Enter a number");
-    sacnf("%d", &a);
-    if(a%2==0)
-    {
-        printf("The number is even");
-    }
-    else
-    {
-        printf("The number is Odd");
-    }
-    getch();
-}`
-  },
-    {
-    title: "Biggest of 3 Numbers",
-    code: `#include <stdio.h>
-#include<conio.h>
-void main() 
-{
-    int a, b, c;
-    clrscr();
-    printf("/n Enter three Numbers");
-    scanf("%d%d%d", &a&b&c);
-    if(a>b)
-    {
-        if(a>c)
-        {
-            printf("%d is the largest number",a);
-        }
-        else
-        {
-            printf("%d is the largest number", c);
-        }
-          else
-        {
-        if (b>c)
-        {
-            printf("%d is the largest number", b);
-        }
-        else
-        {
-            printf("%d is the largest number", c);
-        }
-    }
-    getch();
-}`
-  },
-    {
-    title: "The grade of student",
-    code: `#include <stdio.h>
-#include<conio.h>
-void main() 
-{
-    int m;
-    clrscr();
-    printf("/n Enter the numbers");
-    scanf("%d", &m);
-    if(m>=95)
-    {
-        printf("/n the grade is S");
-    }
-    else if(m>=85)
-    {
-        printf("/n the grade is A+");
-    }
-        else if(m>=75)
-        {
-            printf("/n the grade is A");
-        }
-            else if(m>=65)
-            {
-            printf("/n the grade is B+");
-            }
-            else if(m>=55)
-    {
-        printf("/n the grade is B");
-    }
-    else if(m>=45)
-    {
-        printf("/n the grade is C");
-    }
-    else if(m>=35)
-    {
-        printf("/n the grade is D");
-    }
-    else
-    {
-        printf("/n the grade is F");
-    }
-    getch();
-}`
-  },
-    {
-    title: "Factorial of a Number",
-    code: `#include <stdio.h>
-#include<conio.h>
-void main() 
-{
-    int n, i, f=1;
-    clrscr();
-    printf("NEter the numbers");
-    scanf("%d", &n);
-    for(i=1; i<n; i++)
-    {
-        f=f*;
-    }
-    printf("Factorial of %d=%d", n,f);
-    getch();
-}`
-  },
-   {
-    title: "Fibsonacci Sereies",
-    code: `#include <stdio.h>
-#include<conio.h>
-void main() 
-{
-    int n, i, l, prev, next;
-    clrscr();
-    printf("/N Enter the number");
-    scanf("%d", &l);
-    n=l;
-    prev=l;
-    printf("The fibonacci serries with %d elements:", l)
-    printf("%d%d", prev, n);
-    for(i=2; i<1; i++)
-   {
-    next=n+prev
-    prev=n;
-    n=next;
-    printf("%d", next);
-    }
-    getch();
-}`
-  },
-  {
-    title: "Palindrome or not",
-    code: `#include <stdio.h>
-#include<conio.h>
-void main() 
-{
-char ch[10], temp[10];
-clrscr();
-printf("/n Enter the string:");
-gets(ch);
-strcpy(temp, ch);
-strrev(temp);
-if(strcmp (ch, temp)==0)
-{
-printf("The string is palindrome");
-}
-else
-{
-  printf("The string is not a palindrome");
-}
+    printf("\\nNegative");
+
   getch();
 }`
   },
+
+  {
+    title: "Odd or Even",
+    code: `#include <stdio.h>
+#include <conio.h>
+
+void main() {
+    int a;
+    clrscr();
+
+    printf("Enter a number: ");
+    scanf("%d", &a);
+
+    if(a % 2 == 0)
+        printf("Even");
+    else
+        printf("Odd");
+
+    getch();
+}`
+  },
+
+  {
+    title: "Biggest of 3 Numbers",
+    code: `#include <stdio.h>
+#include <conio.h>
+
+void main() {
+    int a, b, c;
+    clrscr();
+
+    printf("\\nEnter three numbers:");
+    scanf("%d%d%d", &a, &b, &c);
+
+    if(a > b && a > c)
+        printf("%d is largest", a);
+    else if(b > c)
+        printf("%d is largest", b);
+    else
+        printf("%d is largest", c);
+
+    getch();
+}`
+  },
+
+  {
+    title: "Grade of Student",
+    code: `#include <stdio.h>
+#include <conio.h>
+
+void main() {
+    int m;
+    clrscr();
+
+    printf("\\nEnter marks:");
+    scanf("%d", &m);
+
+    if(m >= 95)
+        printf("S");
+    else if(m >= 85)
+        printf("A+");
+    else if(m >= 75)
+        printf("A");
+    else if(m >= 65)
+        printf("B+");
+    else if(m >= 55)
+        printf("B");
+    else if(m >= 45)
+        printf("C");
+    else if(m >= 35)
+        printf("D");
+    else
+        printf("F");
+
+    getch();
+}`
+  },
+
+  {
+    title: "Factorial",
+    code: `#include <stdio.h>
+#include <conio.h>
+
+void main() {
+    int n, i, f = 1;
+    clrscr();
+
+    printf("Enter number:");
+    scanf("%d", &n);
+
+    for(i = 1; i <= n; i++) {
+        f = f * i;
+    }
+
+    printf("Factorial = %d", f);
+    getch();
+}`
+  },
+
+  {
+    title: "Fibonacci Series",
+    code: `#include <stdio.h>
+#include <conio.h>
+
+void main() {
+    int n, i, a = 0, b = 1, next;
+    clrscr();
+
+    printf("Enter number of terms:");
+    scanf("%d", &n);
+
+    printf("%d %d", a, b);
+
+    for(i = 2; i < n; i++) {
+        next = a + b;
+        printf(" %d", next);
+        a = b;
+        b = next;
+    }
+
+    getch();
+}`
+  },
+
+  {
+    title: "Addition of Two Matrices",
+    code: `#include <stdio.h>
+#include <conio.h>
+
+void main() {
+    int a[10][10], b[10][10], sum[10][10];
+    int i, j, r, c;
+
+    clrscr();
+
+    printf("Enter rows and columns: ");
+    scanf("%d%d", &r, &c);
+
+    printf("Enter first matrix:\\n");
+    for(i = 0; i < r; i++) {
+        for(j = 0; j < c; j++) {
+            scanf("%d", &a[i][j]);
+        }
+    }
+
+    printf("Enter second matrix:\\n");
+    for(i = 0; i < r; i++) {
+        for(j = 0; j < c; j++) {
+            scanf("%d", &b[i][j]);
+        }
+    }
+
+    // Addition
+    for(i = 0; i < r; i++) {
+        for(j = 0; j < c; j++) {
+            sum[i][j] = a[i][j] + b[i][j];
+        }
+    }
+
+    printf("Sum of matrices:\\n");
+    for(i = 0; i < r; i++) {
+        for(j = 0; j < c; j++) {
+            printf("%d ", sum[i][j]);
+        }
+        printf("\\n");
+    }
+
+    getch();
+}`
+  },
+
+  {
+    title: "Palindrome String",
+    code: `#include <stdio.h>
+#include <string.h>
+#include <conio.h>
+
+void main() {
+    char ch[20], temp[20];
+    clrscr();
+
+    printf("Enter string:");
+    gets(ch);
+
+    strcpy(temp, ch);
+    strrev(temp);
+
+    if(strcmp(ch, temp) == 0)
+        printf("Palindrome");
+    else
+        printf("Not palindrome");
+
+    getch();
+}`
+  }
 ];
